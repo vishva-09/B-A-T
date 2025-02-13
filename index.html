@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Balaji Auto and Tyres</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            text-align: center;
+            padding: 20px;
+        }
+        h2 {
+            color: #333;
+        }
+        form {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+            text-align: left;
+        }
+        label {
+            font-weight: bold;
+        }
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            background: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #218838;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        th {
+            background: #28a745;
+            color: white;
+        }
+    </style>
+    <script>
+        async function submitForm(event) {
+            event.preventDefault();
+
+            let customerName = document.getElementById("customerName").value;
+            let address = document.getElementById("address").value;
+            let contactNumber = document.getElementById("contactNumber").value;
+            let vehicleName = document.getElementById("vehicleName").value;
+            let vehicleNumber = document.getElementById("vehicleNumber").value;
+            let kilometers = document.getElementById("kilometers").value;
+            let remarks = document.getElementById("remarks").value;
+
+            if (!customerName || !address || !contactNumber || !vehicleName || !vehicleNumber || !kilometers || !remarks) {
+                alert("All fields are mandatory!");
+                return;
+            }
+
+            let formData = { customerName, address, contactNumber, vehicleName, vehicleNumber, kilometers, remarks };
+
+            try {
+                let response = await fetch("/submit", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(formData)
+                });
+
+                let result = await response.json();
+                
+                if (result.success) {
+                    alert("Thank you! Your entry has been saved.");
+                    document.getElementById("entryForm").reset();
+                    fetchEntries();
+                } else {
+                    alert("Error saving data! Please try again.");
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Server error! Try again later.");
+            }
+        }
+
+        async function fetchEntries() {
+            try {
+                let response = await fetch("/getEntries");
+                let data = await response.json();
+
+                let tableBody = document.getElementById("tableBody");
+                tableBody.innerHTML = "";
+
+                data.forEach(entry => {
+                    let row = `<tr>
+                        <td>${entry.customerName}</td>
+                        <td>${entry.address}</td>
+                        <td>${entry.contactNumber}</td>
+                        <td>${entry.vehicleName}</td>
+                        <td>${entry.vehicleNumber}</td>
+                        <td>${entry.kilometers}</td>
+                        <td>${entry.remarks}</td>
+                    </tr>`;
+                    tableBody.innerHTML += row;
+                });
+            } catch (error) {
+                console.error("Error fetching entries:", error);
+            }
+        }
+
+        async function downloadExcel() {
+            window.location.href = "/download";
+        }
+
+        window.onload = fetchEntries;
+    </script>
+</head>
+<body>
+    <h2>Balaji Auto and Tyres - Entry Form</h2>
+    <form id="entryForm" onsubmit="submitForm(event)">
+        <label>Customer Name:</label><input type="text" id="customerName" required><br>
+        <label>Address:</label><input type="text" id="address" required><br>
+        <label>Contact Number:</label><input type="text" id="contactNumber" required><br>
+        <label>Vehicle Name:</label><input type="text" id="vehicleName" required><br>
+        <label>Vehicle Number:</label><input type="text" id="vehicleNumber" required><br>
+        <label>Kilometers:</label><input type="number" id="kilometers" required><br>
+        <label>Remarks:</label><input type="text" id="remarks" required><br>
+        <button type="submit">Submit</button>
+    </form>
+
+    <h2>Admin Panel</h2>
+    <button onclick="downloadExcel()">Download Excel File</button>
+    <table>
+        <thead>
+            <tr>
+                <th>Customer Name</th>
+                <th>Address</th>
+                <th>Contact Number</th>
+                <th>Vehicle Name</th>
+                <th>Vehicle Number</th>
+                <th>Kilometers</th>
+                <th>Remarks</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+    </table>
+</body>
+</html>
