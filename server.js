@@ -29,7 +29,44 @@ const initializeExcelFile = () => {
 // Initialize the Excel file when the server starts
 initializeExcelFile();
 
-// API to download Excel file (Admin only)
+// Route to submit data to Excel
+app.post('/submit', (req, res) => {
+    try {
+        const newData = [
+            req.body.customerName,
+            req.body.address,
+            req.body.contactNumber,
+            req.body.vehicleName,
+            req.body.vehicleNumber,
+            req.body.kilometers,
+            req.body.remarks
+        ];
+
+        // Read existing Excel file
+        let workbook = xlsx.readFile(filePath);
+        let worksheet = workbook.Sheets[workbook.SheetNames[0]];
+        
+        // Convert existing data to JSON
+        let data = xlsx.utils.sheet_to_json(worksheet, { header: 1 });
+
+        // Append new row
+        data.push(newData);
+
+        // Convert back to worksheet
+        let newWorksheet = xlsx.utils.aoa_to_sheet(data);
+        workbook.Sheets[workbook.SheetNames[0]] = newWorksheet;
+
+        // Write back to file
+        xlsx.writeFile(workbook, filePath);
+
+        res.json({ success: true, message: "Data saved successfully!" });
+    } catch (error) {
+        console.error("Error saving data:", error);
+        res.status(500).json({ success: false, message: "Error saving data." });
+    }
+});
+
+// Admin-only: Download Excel File
 app.get('/download', (req, res) => {
     res.download(filePath, "BalajiAutoData.xlsx");
 });
